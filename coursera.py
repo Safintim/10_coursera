@@ -35,7 +35,6 @@ def get_courses(url, count=20):
 
 
 def get_course_info(url_cource):
-    print(url_cource)
     response = requests.get(url_cource)
     response.raise_for_status()
     content = response.text
