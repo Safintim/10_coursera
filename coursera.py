@@ -10,9 +10,9 @@ from bs4 import BeautifulSoup
 def main():
     parser = create_parser()
     namespace = parser.parse_args()
-    URL_COURSES = 'https://www.coursera.org/sitemap~www~courses.xml'
+    url_courses = 'https://www.coursera.org/sitemap~www~courses.xml'
     try:
-        courses = get_courses(URL_COURSES)
+        courses = get_courses(url_courses)
         courses_info = [get_course_info(course) for course in courses]
     except requests.exceptions.RequestException as e:
         exit(e)
