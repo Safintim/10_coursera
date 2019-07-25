@@ -1,5 +1,6 @@
 import requests
 import argparse
+import random
 import json
 from lxml import etree
 from openpyxl import Workbook
@@ -30,10 +31,11 @@ def get_courses(url, count=20):
     response.raise_for_status()
     content = response.content
     urlset = etree.XML(content)
-    return [loc.text for url in urlset[:count] for loc in url]
+    return [random.choice(urlset).getchildren()[0].text for _ in range(count)]
 
 
 def get_course_info(url_cource):
+    print(url_cource)
     response = requests.get(url_cource)
     response.raise_for_status()
     content = response.text
@@ -44,13 +46,17 @@ def get_course_info(url_cource):
     count_week_class = 'H1Xl_jd0thw-o_O-weightNormal_s9jwp5-o_O-fontHeadline_1uu0gyz text-secondary d-block m-y-1'
     rating_class = 'H4_1k76nzj-o_O-weightBold_uvlhiv-o_O-bold_1byw3y2 m-l-1s m-r-1 m-b-0'
 
-    script_content = page_content.find('script', attrs={'type': 'application/ld+json'}).text
-    date_start = json.loads(script_content)['@graph'][1]['hasCourseInstance']['startDate']
+    script_content = page_content.find('script', attrs={'type': 'application/ld+json'})
+    date_start = None
+    if script_content:
+        date_start = json.loads(script_content.text)['@graph'][1]['hasCourseInstance']['startDate']
+
+    rating = page_content.find(class_=rating_class)
     return [
         page_content.find(class_=title_class).text,
-        page_content.find(class_=rating_class).text,
+        rating.text if rating else '-',
         page_content.find_all(class_=language_class)[-1].text,
-        date_start,
+        date_start if date_start else '-',
         len(page_content.find_all(class_=count_week_class)),
     ]
 
