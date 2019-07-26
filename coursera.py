@@ -47,34 +47,27 @@ def download_html_page_course(url_course):
 def get_course_info(html_content):
     page_content = BeautifulSoup(html_content, 'html.parser')
 
-    title_class = 'H2_1pmnvep-o_O-weightNormal_s9jwp5-o_O-fontHeadline_1uu0gyz max-text-width-xl m-b-1s'
-    language_class = 'H4_1k76nzj-o_O-weightBold_uvlhiv-o_O-bold_1byw3y2 m-b-0'
-    count_week_class = 'H1Xl_jd0thw-o_O-weightNormal_s9jwp5-o_O-fontHeadline_1uu0gyz text-secondary d-block m-y-1'
-    rating_class = 'H4_1k76nzj-o_O-weightBold_uvlhiv-o_O-bold_1byw3y2 m-l-1s m-r-1 m-b-0'
-
     script_content = page_content.find('script', attrs={'type': 'application/ld+json'})
     date_start = None
     if script_content:
         date_start = json.loads(script_content.text)['@graph'][1]['hasCourseInstance']['startDate']
 
-    rating = page_content.find(class_=rating_class)
-    return [
-        page_content.find(class_=title_class).text,
-        rating.text if rating else '-',
-        page_content.find_all(class_=language_class)[-1].text,
-        date_start if date_start else '-',
-        len(page_content.find_all(class_=count_week_class)),
-    ]
+    rating = page_content.select_one('div.CourseRating span')
+    return {
+        'title': page_content.select_one('div.Banner .BannerTitle h1').text,
+        'rating': rating.text if rating else '-',
+        'language': page_content.select('div.ProductGlance div h4')[-1].text,
+        'date_start': date_start if date_start else '-',
+        'count_week': len(page_content.select('div.leftColumn_1rt24er')),
+    }
 
 
 def output_courses_info_to_xlsx(filepath, courses):
     work_book = Workbook()
     work_sheet = work_book.active
-    header = ['title', 'rating', 'language', 'date_start', 'count_week']
-    work_sheet.append(header)
 
     for course in courses:
-        work_sheet.append(course)
+        work_sheet.append(list(course.values()))
 
     save_workbook(work_book, filepath)
 
