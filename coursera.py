@@ -69,6 +69,10 @@ def output_courses_info_to_xlsx(filepath, courses):
     for course in courses:
         work_sheet.append(course)
 
+    save_workbook(work_book, filepath)
+
+
+def save_workbook(work_book, filepath):
     work_book.save(filepath)
 
 
