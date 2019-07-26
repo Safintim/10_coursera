@@ -10,10 +10,11 @@ from bs4 import BeautifulSoup
 def main():
     parser = create_parser()
     namespace = parser.parse_args()
-    url_courses = 'https://www.coursera.org/sitemap~www~courses.xml'
+    url_xml_courses = 'https://www.coursera.org/sitemap~www~courses.xml'
     try:
-        courses = get_courses(url_courses)
-        courses_info = [get_course_info(course) for course in courses]
+        xml_content = download_xml_content(url_xml_courses)
+        urls_courses = get_random_urls_courses_from_xml(xml_content)
+        courses_info = [get_course_info(download_html_page_course(url_course)) for url_course in urls_courses]
     except requests.exceptions.RequestException as e:
         exit(e)
 
@@ -26,19 +27,25 @@ def create_parser():
     return parser
 
 
-def get_courses(url, count=20):
+def download_xml_content(url):
     response = requests.get(url)
     response.raise_for_status()
-    content = response.content
-    urlset = etree.XML(content)
+    return response.content
+
+
+def get_random_urls_courses_from_xml(xml_content, count=20):
+    urlset = etree.XML(xml_content)
     return [random.choice(urlset).getchildren()[0].text for _ in range(count)]
 
 
-def get_course_info(url_cource):
-    response = requests.get(url_cource)
+def download_html_page_course(url_course):
+    response = requests.get(url_course)
     response.raise_for_status()
-    content = response.text
-    page_content = BeautifulSoup(content, 'html.parser')
+    return response.text
+
+
+def get_course_info(html_content):
+    page_content = BeautifulSoup(html_content, 'html.parser')
 
     title_class = 'H2_1pmnvep-o_O-weightNormal_s9jwp5-o_O-fontHeadline_1uu0gyz max-text-width-xl m-b-1s'
     language_class = 'H4_1k76nzj-o_O-weightBold_uvlhiv-o_O-bold_1byw3y2 m-b-0'
